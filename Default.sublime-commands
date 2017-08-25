@@ -10,5 +10,9 @@
     {
         "caption": "Colorsublime: Browse Themes Online",
         "command": "browse"
+    },
+    {
+        "caption": "Colorsublime: Install Random Theme",
+        "command": "install_random"
     }
 ]

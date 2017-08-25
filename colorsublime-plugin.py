@@ -1,5 +1,6 @@
 import imp
 import sys
+import random
 
 import sublime_plugin
 
@@ -8,6 +9,7 @@ from .colorsublime import status
 from .colorsublime import logger
 
 NO_SELECTION = -1
+CONN_ERR_MSG = 'Theme list not found. Please check internet connection or enable debug in settings and report the stack traces.'
 
 # Make sure all dependencies are reloaded on upgrade
 reloader_path = 'Colorsublime.colorsublime.reloader'
@@ -29,9 +31,7 @@ class InstallThemeCommand(sublime_plugin.WindowCommand):
     def display_list(self, themes):
         self.status.stop()
         if not themes:
-            status.error('Theme list not found. Please check internet ' +
-                         'connection or enable debug in settings and ' +
-                         'report the stack traces.')
+            status.error(CONN_ERR_MSG)
             return
 
         self.themes = themes
@@ -83,3 +83,27 @@ class UninstallThemeCommand(sublime_plugin.WindowCommand):
 class BrowseCommand(sublime_plugin.WindowCommand):
     def run(self):
         self.window.run_command('open_url', {'url': 'https://colorsublime.github.io/'})
+
+class InstallRandomCommand(sublime_plugin.WindowCommand):
+    def run(self):
+        log.info('Running install random command')
+        self.theme_status = {}
+        self.status = status.loading('Getting Theme list')
+        commands.fetch_repo(self.pick_theme)
+        self.status.stop()
+
+    def pick_theme(self, themes):
+        if not themes:
+            status.error(CONN_ERR_MSG)
+            return
+
+        current_theme = commands.get_current_theme()
+        while True:
+            random_theme = random.choice( tuple(themes.values()) )
+            if current_theme != random_theme.cache_path.rel:
+                break
+
+        commands.install_theme(random_theme)
+        status.message('Theme %s installed!' % random_theme.name)
+        self.themes = themes
+
